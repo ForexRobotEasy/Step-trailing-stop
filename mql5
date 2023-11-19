@@ -1,0 +1,43 @@
+mql5
+//+------------------------------------------------------------------+
+//|                                         Step trailing stop.mq5 |
+//|                     Copyright 2021, Forex Robot Easy Team         |
+//|                                       https://forexroboteasy.com |
+//+------------------------------------------------------------------+
+
+// Input parameters
+input double StepSize = 10.0; // Default step size for moving the stop loss
+
+//+------------------------------------------------------------------+
+//|                                                                  |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+   // Get the current stop loss level
+   double stopLoss = OrderGetDouble(ORDER_TICKET, ORDER_STOPLOSS);
+
+   // Calculate the current price movement
+   double priceMovement = MathAbs(stopLoss - SymbolInfoDouble(_Symbol, SYMBOL_BID));
+
+   // Calculate the new stop loss level
+   double newStopLoss = stopLoss;
+
+   if (priceMovement >= StepSize)
+   {
+      // Calculate the number of steps required
+      int steps = (int)(priceMovement / StepSize);
+
+      // Calculate the new stop loss level
+      newStopLoss = SymbolInfoDouble(_Symbol, SYMBOL_BID) - (steps * StepSize * SymbolInfoDouble(_Symbol, SYMBOL_POINT));
+   }
+
+   // Check if the new stop loss level is different from the current one
+   if (newStopLoss != stopLoss)
+   {
+      // Modify the stop loss level
+      if (!OrderModify(OrderTicket(), OrderOpenPrice(), newStopLoss, OrderTakeProfit(), 0, clrNONE))
+      {
+         Print('Failed to modify the stop loss level!');
+      }
+   }
+}
